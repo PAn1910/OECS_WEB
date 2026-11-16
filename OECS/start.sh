@@ -10,9 +10,17 @@ tailscaled \
   --socket=/tmp/tailscaled.sock \
   --state=mem: &
 
-# Wait until Tailscale CLI can communicate with daemon
-until tailscale --socket=/tmp/tailscaled.sock status >/dev/null 2>&1; do
-  sleep 2
+echo "Waiting for Tailscale socket..."
+
+# Wait for the socket, not login status
+i=0
+while [ ! -S /tmp/tailscaled.sock ]; do
+  i=$((i + 1))
+  if [ "$i" -ge 30 ]; then
+    echo "ERROR: Tailscale socket not created"
+    exit 1
+  fi
+  sleep 1
 done
 
 echo "Authenticating Tailscale..."
